@@ -154,18 +154,25 @@
         }
 
         async function createFlightLog(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            const data = Object.fromEntries(formData.entries());
-            await fetch('/api/flightLogs', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-            fetchFlightLogs();
-        }
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+    const response = await fetch('/api/flightLogs', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    });
+
+    if (response.ok) {
+        fetchFlightLogs();
+        event.target.reset(); 
+        alert('Flight log created successfully!');
+    } else {
+        alert('Failed to create flight log.');
+    }
+}
 
         async function deleteFlightLog(flightID) {
             await fetch(`/api/flightLogs/${flightID}`, {
@@ -230,7 +237,7 @@
         document.addEventListener('DOMContentLoaded', fetchFlightLogs);
     </script>
 </head>
-<body>
+<!-- <body> -->
     <header>
         <h1>Flight Logs</h1>
         <a href="/logout">Sign Out</a>
@@ -277,5 +284,5 @@
             <button onclick="deleteUser()">Delete</button>
         </div>
     </div>
-</body>
+<!-- </body> -->
 </html>
