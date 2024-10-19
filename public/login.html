@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h1, h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        form label {
+            margin-bottom: 5px;
+            align-self: flex-start;
+            color: #555;
+        }
+        form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        form button {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        form button:hover {
+            background-color: #555;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+    <script>
+        async function createUser(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+            await fetch('/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            alert('User created');
+        }
+
+        async function loginUser(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            if (response.ok) {
+                window.location.href = '/flightLogs';
+            } else {
+                const errorMessage = document.getElementById('errorMessage');
+                const errorData = await response.json();
+                errorMessage.textContent = errorData.message;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <form onsubmit="loginUser(event)">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <button type="submit">Login</button>
+        </form>
+        <div id="errorMessage" class="error-message"></div>
+        <br />
+        <h2>Create User</h2>
+        <form onsubmit="createUser(event)">
+            <label for="newUsername">Username:</label>
+            <input type="text" id="newUsername" name="username" required>
+            <label for="newPassword">Password:</label>
+            <input type="password" id="newPassword" name="password" required>
+            <button type="submit">Create User</button>
+        </form>
+    </div>
+</body>
+</html>

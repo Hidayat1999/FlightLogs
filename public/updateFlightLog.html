@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Flight Log</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        form label {
+            margin-bottom: 5px;
+            align-self: flex-start;
+            color: #555;
+        }
+        form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        form button {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        form button:hover {
+            background-color: #555;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+    <script>
+        async function fetchFlightLogDetails(flightID) {
+            const response = await fetch(`/api/flightLogs/search?flightID=${flightID}`);
+            if (response.ok) {
+                const flightLog = await response.json();
+                document.getElementById('tailNumber').value = flightLog.tailNumber;
+                document.getElementById('takeoff').value = flightLog.takeoff;
+                document.getElementById('landing').value = flightLog.landing;
+                document.getElementById('duration').value = flightLog.duration;
+            } else {
+                document.getElementById('errorMessage').textContent = 'Flight log not found.';
+            }
+        }
+
+        async function updateFlightLog(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+            const flightID = new URLSearchParams(window.location.search).get('flightID');
+
+            // Validation
+            if (!data.tailNumber || !data.takeoff || !data.landing || !data.duration) {
+                document.getElementById('errorMessage').textContent = 'All fields are required.';
+                return;
+            }
+
+            await fetch(`/api/flightLogs/${flightID}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            window.opener.fetchFlightLogs();
+            window.close();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const flightID = new URLSearchParams(window.location.search).get('flightID');
+            fetchFlightLogDetails(flightID);
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Update Flight Log</h1>
+        <form onsubmit="updateFlightLog(event)">
+            <label for="tailNumber">Tail Number:</label>
+            <input type="text" id="tailNumber" name="tailNumber" required>
+            <label for="takeoff">Takeoff:</label>
+            <input type="text" id="takeoff" name="takeoff" required>
+            <label for="landing">Landing:</label>
+            <input type="text" id="landing" name="landing" required>
+            <label for="duration">Duration:</label>
+            <input type="text" id="duration" name="duration" required>
+            <button type="submit">Update Flight Log</button>
+        </form>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+</body>
+</html>

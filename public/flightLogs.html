@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Logs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+        }
+        header h1 {
+            margin: 0;
+        }
+        header a {
+            color: #fff;
+            text-decoration: none;
+            background-color: #d9534f;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        header a:hover {
+            background-color: #c9302c;
+        }
+        main {
+            padding: 20px;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        form label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        form input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        form button {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #555;
+        }
+        .flight-log {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .flight-log p {
+            margin: 5px 0;
+        }
+        .flight-log button {
+            background-color: #d9534f;
+            color: #fff;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .flight-log button:hover {
+            background-color: #c9302c;
+        }
+        .flight-log button.update {
+            background-color: #5bc0de;
+        }
+        .flight-log button.update:hover {
+            background-color: #31b0d5;
+        }
+        .form-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px; 
+        }
+        .form-container form {
+            width: 100%;
+        }
+        .form-container input {
+           box-sizing: border-box;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 300px;
+            border-radius: 10px;
+        }
+        .modal-content button {
+            margin: 10px;
+        }
+    </style>
+    <script>
+        async function fetchFlightLogs() {
+            const response = await fetch('/api/flightLogs');
+            const flightLogs = await response.json();
+            const flightLogsContainer = document.getElementById('flightLogsContainer');
+            flightLogsContainer.innerHTML = '';
+            flightLogs.forEach(log => {
+                const logElement = document.createElement('div');
+                logElement.className = 'flight-log';
+                logElement.innerHTML = `
+                    <p>Tail Number: ${log.tailNumber}</p>
+                    <p>Flight ID: ${log.flightID}</p>
+                    <p>Takeoff: ${log.takeoff}</p>
+                    <p>Landing: ${log.landing}</p>
+                    <p>Duration: ${log.duration}</p>
+                    <button onclick="deleteFlightLog('${log.flightID}')">Delete</button>
+                    <button class="update" onclick="updateFlightLog('${log.flightID}')">Update</button>
+                `;
+                flightLogsContainer.appendChild(logElement);
+            });
+        }
+
+        async function createFlightLog(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+            await fetch('/api/flightLogs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            fetchFlightLogs();
+        }
+
+        async function deleteFlightLog(flightID) {
+            await fetch(`/api/flightLogs/${flightID}`, {
+                method: 'DELETE'
+            });
+            fetchFlightLogs();
+        }
+
+        function updateFlightLog(flightID) {
+            window.open(`/updateFlightLog.html?flightID=${flightID}`, 'Update Flight Log', 'width=400,height=600');
+        }
+
+        async function searchFlightLogs(event) {
+            event.preventDefault();
+            const flightID = document.getElementById('searchFlightID').value;
+            const response = await fetch(`/api/flightLogs/search?flightID=${flightID}`);
+            const flightLog = await response.json();
+            const flightLogsContainer = document.getElementById('flightLogsContainer');
+            flightLogsContainer.innerHTML = '';
+            if (response.ok) {
+                const logElement = document.createElement('div');
+                logElement.className = 'flight-log';
+                logElement.innerHTML = `
+                    <p>Tail Number: ${flightLog.tailNumber}</p>
+                    <p>Flight ID: ${flightLog.flightID}</p>
+                    <p>Takeoff: ${flightLog.takeoff}</p>
+                    <p>Landing: ${flightLog.landing}</p>
+                    <p>Duration: ${flightLog.duration}</p>
+                    <button onclick="deleteFlightLog('${flightLog.flightID}')">Delete</button>
+                    <button class="update" onclick="updateFlightLog('${flightLog.flightID}')">Update</button>
+                `;
+                flightLogsContainer.appendChild(logElement);
+            } else {
+                flightLogsContainer.innerHTML = '<p>Flight log not found.</p>';
+            }
+        }
+
+        function showDeleteUserModal(event) {
+            event.preventDefault();
+            const modal = document.getElementById('deleteUserModal');
+            modal.style.display = 'block';
+        }
+
+        function closeDeleteUserModal() {
+            const modal = document.getElementById('deleteUserModal');
+            modal.style.display = 'none';
+        }
+
+        async function deleteUser() {
+            const username = document.getElementById('deleteUsername').value;
+            const response = await fetch(`/users/${username}`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                alert('User deleted');
+            } else {
+                alert('Username does not exist');
+            }
+            closeDeleteUserModal();
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchFlightLogs);
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Flight Logs</h1>
+        <a href="/logout">Sign Out</a>
+    </header>
+    <main>
+        <form onsubmit="createFlightLog(event)">
+            <label for="tailNumber">Tail Number:</label>
+            <input type="text" id="tailNumber" name="tailNumber" required>
+            <br>
+            <label for="flightID">Flight ID:</label>
+            <input type="text" id="flightID" name="flightID" required>
+            <br>
+            <label for="takeoff">Takeoff:</label>
+            <input type="text" id="takeoff" name="takeoff" required>
+            <br>
+            <label for="landing">Landing:</label>
+            <input type="text" id="landing" name="landing" required>
+            <br>
+            <label for="duration">Duration:</label>
+            <input type="text" id="duration" name="duration" required>
+            <br>
+            <button type="submit">Create Flight Log</button>
+        </form>
+        <div class="form-container">
+            <form onsubmit="searchFlightLogs(event)">
+                <label for="searchFlightID">Search by Flight ID:</label>
+                <input type="text" id="searchFlightID" name="searchFlightID" required>
+                <button type="submit">Search</button>
+            </form>
+            <br/>
+            <form onsubmit="showDeleteUserModal(event)">
+                <label for="deleteUsername">Delete User by Username:</label>
+                <input type="text" id="deleteUsername" name="deleteUsername" required>
+                <button type="submit">Delete User</button>
+            </form>
+        </div>
+        <div id="flightLogsContainer"></div>
+    </main>
+
+    <div id="deleteUserModal" class="modal">
+        <div class="modal-content">
+            <p>Delete User? This action can't be undone.</p>
+            <button onclick="closeDeleteUserModal()">Cancel</button>
+            <button onclick="deleteUser()">Delete</button>
+        </div>
+    </div>
+</body>
+</html>
